@@ -32,29 +32,38 @@ async function dbGetUser(id) {
 }
 
 async function dbGetAllUser() {
+  // later as db grows pagination is going to be implemented
   const queryString = 'SELECT id, first_name, last_name, email, created_on FROM users';
   const { rows } = await pool.query(queryString);
   return rows;
 }
 
-/*
-async function dbGetUserPassword (id) {
-  const queryString = 'SELECT _id, password FROM "project-owners" WHERE _id = ($1)::uuid';
-  const values = [id];
-  const { rows: [data] } = await pool.query(queryString, values);
-  if (!data) {
-    const message = 'Bad request';
-    const error = new Error(message);
-    error.statusCode = 400;
-    throw error;
-  }
-  return data;
+
+async function dbGetUserPassword(id) {
+  // the controller handles the case where there is no result with the provided id
+  const queryString = 'SELECT id, password FROM users WHERE id = ($1)::uuid';
+  const { rows: [{ password }] } = await pool.query(queryString, [id]);
+  return password;
 }
-*/
+
+async function dbPatchProjectOwner(id, column, newValue) {
+  try {
+    const queryString = `UPDATE users SET ${column} = $1 WHERE id = ($2)::uuid RETURNING id, first_name, last_name, email`;
+    const { rows : [data]} = await pool.query(queryString, [newValue, id]);
+    return data;
+  } catch (error) {
+    if (error.code === '22P02') {
+      return undefined;
+    }
+    throw new Error(error);
+  }
+}
 
 module.exports = {
   dbAddUser,
   dbDeleteUser,
   dbGetUser,
-  dbGetAllUser
-}
+  dbGetAllUser,
+  dbGetUserPassword,
+  dbPatchProjectOwner,
+};
