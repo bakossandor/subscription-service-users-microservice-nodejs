@@ -8,6 +8,6 @@ module.exports = (app) => {
   app.post('/users', registerUser);
   app.get('/users/:id', getUser);
   app.delete('/users/:id', unsubscribeUser);
-  // app.patch('/:id/password', updatePassword);
-  // app.patch('/:id/email', updateEmail);
+  app.patch('/users/:id/password', updatePassword);
+  app.patch('/users/:id/email', updateEmail);
 };
